@@ -9,6 +9,6 @@
 
 ２．連想記憶パイソンちゃん
 
-( kioku.py )
+( kioku.py / kioku.dat )
 
 集合による連想記憶実験
