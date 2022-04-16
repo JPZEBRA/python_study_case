@@ -1,6 +1,6 @@
 # 趣味のPython学習　Project 01-01
 # しりとりゲーム：人工無能パイソンちゃん
-# ばーじょん 0.2
+# ばーじょん 0.2.1
 
 # 単語記憶
 memory = []
@@ -24,6 +24,13 @@ counter = 0
 def speak(who,message) :
     print(who + " : " + message)
     return
+
+def safe_word(word) :
+    word = word.replace("/","")
+    word = word.replace(",","")
+    word = word.replace(" ","")
+    word = word.replace("　","")
+    return word
 
 def find_word(word) :
     for record in memory :
@@ -60,8 +67,13 @@ def end_word(word) :
 
 def list_up_words() :
     print("***** 覚えた言葉 *****")
+    ctw = 0
     for record in memory :
-        print(record[0] + " ( " + str(record[1]) + " ) " )
+        print(record[0] + " ( " + str(record[1]) + " ) " , end = " ")
+        ctw += 1
+        if ctw %6 == 0 :
+             print("\n")
+    print("\n")
     return
 
 def write_memory() :
@@ -93,6 +105,7 @@ while speaking :
         # あなた
         while True :
             word = input(YOU+":")
+            word = safe_word(word)
             if(len(word)>0) :
                 if word=="PASS" :
                     pass_you += 1
