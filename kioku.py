@@ -1,6 +1,6 @@
 # 趣味のPython学習　Project 01-02
 # 連想記憶パイソンちゃん
-# ばーじょん 0.1.1
+# ばーじょん 0.1.2
 
 # 連想記憶
 memory = []
@@ -39,35 +39,71 @@ def mind_word_one(like) :
     return void
 
 def mind_word(likes) :
-     result = ""
-     while len(likes)>0 :
-         like = likes[:likes.find("/")]
-         if len(like) <= 0 :
-             like = likes
-             likes = ""
-         else :
-             likes = likes[likes.find("/")+1:]
-         query = mind_word_one(like)
-         if result =="" :
-             result = query
-         else :
-             result = result & query
-     print(result)
+    void = set()
+    result = ""
+    like = ""
+    while len(likes)>0 :
+        if likes.find(":") > 0 :
+            like = likes[:likes.find(":")]
+            likes = likes[likes.find(":")+1:]
+        else :
+            like = likes
+            likes = ""
+        query = mind_word_one(like)
+        if result =="" :
+            result = query
+        else :
+            result = result & query
+    if result == void :
+        print("{}")
+    else :
+        print(result)
+
+def write_memory() :
+    with open("kioku.dat", 'w' ,encoding="UTF-8") as file:
+        for record in memory :
+            for like in record[1] :
+                file.write(record[0]+ ":" + like + "\n")
+
+def read_memory() :
+    memory.clear()
+    with open("kioku.dat",encoding="UTF-8") as file:
+        for line, text in enumerate(file,1) :
+            like = text[:text.find(":")]
+            word = text[text.rfind(":")+1:-1]
+            store_word(word,like)
+
+# MAIN
+
+read_memory()
+
+print("*****連想記憶*****")
+print("* パイソンちゃん *")
+print("******************")
+print(STORE + ":名詞：形容詞")
+print(FIND  + ":名詞")
+print(MIND  + ":形容詞:形容詞...")
+print(END)
 
 while task:
     com = input("COMMAND : ")
-    com = com.replace("／","/")
-    cmd = com[:com.find("/")]
-    words = com[com.find("/")+1:]
-    if len(cmd)<=0 :
+    com = com.replace("：",":")
+    if com.find(":") > 0 :
+        cmd = com[:com.find(":")]
+        words = com[com.find(":")+1:]
+    else :
         cmd = com
+        words = ""
     if cmd == MIND :
         mind_word(words)
     elif cmd == FIND :
         find_word(words)
     elif cmd == STORE :
-        word = words[:words.find("/")]
-        like = words[words.find("/")+1:]
-        store_word(word,like)
+        if words.find(":") > 0 :
+            word = words[:words.find(":")]
+            like = words[words.find(":")+1:]
+            store_word(word,like)
     elif cmd == END :
         task = False
+
+write_memory()

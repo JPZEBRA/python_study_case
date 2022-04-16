@@ -1,6 +1,6 @@
 # 趣味のPython学習　Project 01-01
 # しりとりゲーム：人工無能パイソンちゃん
-# ばーじょん 0.2.1
+# ばーじょん 0.2.2
 
 # 単語記憶
 memory = []
@@ -54,6 +54,8 @@ def count_word(word) :
 
 def reply_word(letter) : 
     for record in memory :
+        if letter == "" :
+            return record[0]
         if record[0][0] == letter and record[2] == 0 :
             if end_word(record[0]) == False or counter % 7 == 5 :
                 return record[0]
@@ -126,9 +128,10 @@ while speaking :
                         else :
                             break
 
-        count_word(word)
-        last_letter = word[-1]
-        if end_word(word) :
+        if word!="PASS" :
+            count_word(word)
+            last_letter = word[-1]
+        elif end_word(word) :
             speak(ME,"あなたの負け！")
             game = False
             break
@@ -143,8 +146,9 @@ while speaking :
                 game = False
         else :
             print(ME,word)
-            count_word(word)
-            last_letter = word[-1]
+            if word!="PASS" :
+                count_word(word)
+                last_letter = word[-1]
             if end_word(word) :
                 speak(ME,"あっ負けちゃった！")
                 game = False
