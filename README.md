@@ -15,6 +15,6 @@
 
 ３．雑貨屋パイソンちゃん
 
-( shopitem.py)
+( shopitem.py / shop.py )
 
 クラスによる販売管理(構築中)
