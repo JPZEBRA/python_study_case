@@ -1,8 +1,8 @@
 # 趣味のPython学習　Project 02-03
 # Python PNG-Converter
-# ばーじょん 1.0.1
+# ばーじょん 1.0.2
 
-ver = "1.0.1"
+ver = "1.0.2"
 
 import zlib
 
@@ -26,7 +26,26 @@ def rdd(data,x,y,w,h) :
 
         return data[y][x]
 
-def conv16to64(data,w,h) :
+def conv16to64RGGBGRY(data,w,h) :
+
+        buffer = []
+
+        for y in range(0,h) :
+
+                for x in range(0,w) :
+
+                        gry = rdd(data,x,y,w,h)
+
+                        alp = 0xFF
+
+                        buffer.append(alp)
+                        buffer.append(gry)
+                        buffer.append(gry)
+                        buffer.append(gry)
+
+        return buffer
+
+def conv16to64RGGB2x2(data,w,h) :
 
         buffer = []
 
@@ -39,13 +58,64 @@ def conv16to64(data,w,h) :
                         gr2 = rdd(data,(x>>1)*2 + 0,(y>>1)*2 + 1,w,h)
                         blu = rdd(data,(x>>1)*2 + 1,(y>>1)*2 + 1,w,h)
 
-                        grn = (( 0xFFFF & gr1 ) + gr2) // 2
+#                       avoid over flow
+                        grn = (( 0x0000FFFF & gr1 ) + gr2) // 2
                         alp = 0xFF
 
                         buffer.append(alp)
                         buffer.append(red)
                         buffer.append(grn)
                         buffer.append(blu)
+
+        return buffer
+
+def RGGB3x3(data,x,y,w,h) :
+
+
+        dt11 = rdd(data,x-1,y-1,w,h)
+        dt12 = rdd(data,x+0,y-1,w,h)
+        dt13 = rdd(data,x+1,y-1,w,h)
+
+        dt21 = rdd(data,x-1,y+0,w,h)
+        dt22 = rdd(data,x+0,y+0,w,h)
+        dt23 = rdd(data,x+1,y+0,w,h)
+
+        dt31 = rdd(data,x-1,y+1,w,h)
+        dt32 = rdd(data,x+0,y+1,w,h)
+        dt33 = rdd(data,x+1,y+1,w,h)
+
+        alp = 0xFF
+
+        if x%2==0 and y%2==0 :
+                red = dt22
+                grn = ((0x0000FFFF & dt12 ) + dt21 + dt23 + dt32)//4
+                blu = ((0x0000FFFF & dt11 ) + dt13 + dt31 + dt33)//4
+        if x%2==0 and y%2==1 :
+                red = ((0x0000FFFF & dt12 ) + dt32)//2
+                grn = dt22
+                blu = ((0x0000FFFF & dt21 ) + dt23)//2
+        if x%2==1 and y%2==0 :
+                red = ((0x0000FFFF & dt21 ) + dt23)//2
+                grn = dt22
+                blu = ((0x0000FFFF & dt12 ) + dt32)//2
+        if x%2==1 and y%2==1 :
+                red = ((0x0000FFFF & dt11 ) + dt13 + dt31 + dt33)//4
+                blu = dt22
+                grn = ((0x0000FFFF & dt12 ) + dt21 + dt23 + dt32)//4
+
+        return (alp,red,grn,blu)
+
+def conv16to64RGGB3x3(data,w,h) :
+
+        buffer = []
+
+        for y in range(0,h) :
+                for x in range(0,w) :
+                        RGBA = RGGB3x3(data,x,y,w,h)
+                        buffer.append(RGBA[0])
+                        buffer.append(RGBA[1])
+                        buffer.append(RGBA[2])
+                        buffer.append(RGBA[3])
 
         return buffer
 
@@ -194,6 +264,16 @@ while len( fnm := input("file : ") ) > 0 :
                         continue
                 else :
 
+                        print("*** DEBAYER MODE ***")
+                        print("1: GRAY")
+                        print("2: RGGB 2x2")
+                        print("3: RGGB 3x3")
+
+                        while True :
+                                dm = int(input("MODE :"))
+                                if 1 <= dm and dm <= 3 :
+                                        break
+
                         print("*** CONVERT MODE ***")
                         print("1: SHIFT MAX")
                         print("2: DIV   MAX")
@@ -209,7 +289,12 @@ while len( fnm := input("file : ") ) > 0 :
 
                         print("*** CONVERT FILE ***")
 
-                        imagebuffer = conv16to64(imagebuffer,width,height)
+                        if dm == 1 :
+                                imagebuffer = conv16to64RGGBGRY(imagebuffer,width,height)
+                        if dm == 2 :
+                                imagebuffer = conv16to64RGGB2x2(imagebuffer,width,height)
+                        if dm == 3 :
+                                imagebuffer = conv16to64RGGB3x3(imagebuffer,width,height)
 
                         if mode == 1 :
                                 imagebuffer = shift_max(imagebuffer)
@@ -223,7 +308,7 @@ while len( fnm := input("file : ") ) > 0 :
                                         img_cv.putpixel((x,y),imagebuffer[width*y+x])
 
 
-                        fno = fnm + ".debayer-" + str(mode) + ".png"
+                        fno = fnm + ".debayer-" + str(dm) + str(mode) + ".png"
                         print(f"*** WRITE OUT : {fno} ***")
                         img_cv.save(fno)
 
