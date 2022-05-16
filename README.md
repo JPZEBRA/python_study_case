@@ -24,3 +24,10 @@
 ( pil-debayer.py )
 
 SharpCap の スナップショットをdebayerします。
+
+５．PIL REBAYER
+
+(pil-rebayer.py)
+
+カラー画像を bayerd (RGGB/PNG) にする逆変換。
+
