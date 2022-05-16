@@ -1,8 +1,8 @@
 # 趣味のPython学習　Project 02-03
 # Python PNG-Converter
-# ばーじょん 1.0.3
+# ばーじょん 1.0.4
 
-ver = "1.0.3"
+ver = "1.0.4"
 
 import zlib
 
@@ -237,6 +237,13 @@ def crc_calc(crc, buff, magic) :
         return crc
 
 
+def change_val(st,val) :
+
+        keyin = input(f"{st} : {val} = ")
+        if len(keyin) == 0 :
+                keyin = str(val)
+        return keyin
+
 # MAIN
 
 print(f"*** PNG16-GRAY to TRUE-COLOR CONVERTER VERSION {ver}***")
@@ -318,9 +325,9 @@ while len( fnm := input("file : ") ) > 0 :
                         print("*** CORRECTION SETTING ***")
 
                         while True :
-                                minval = int(input(f"MIN {minval} :"))
-                                maxval = int(input(f"MAX {maxval} :"))
-                                gnmval = float(input(f"GNM {gnmval} :"))
+                                minval = int(  change_val("MIN",minval))
+                                maxval = int(  change_val("MAX",maxval))
+                                gnmval = float(change_val("GNM",gnmval))
                                 if minval >= maxval :
                                         continue
                                 if gnmval <= 0.0  :
