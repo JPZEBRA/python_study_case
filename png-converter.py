@@ -1,8 +1,8 @@
 # 趣味のPython学習　Project 02-03
 # Python PNG-Converter
-# ばーじょん 1.0.2
+# ばーじょん 1.0.3
 
-ver = "1.0.2"
+ver = "1.0.3"
 
 import zlib
 
@@ -10,6 +10,7 @@ from PIL import Image
 
 # NEED THIS ! get with pip command !
 import imageio
+
 
 # DATA ACCESS
 
@@ -24,7 +25,19 @@ def rdd(data,x,y,w,h) :
         if y >= h :
                 return 0
 
-        return data[y][x]
+        val = data[y][x]
+
+#       MIN-MAX CORRECT
+        if val > maxval :
+                val = maxval
+        val = val - minval
+        if val < 0 :
+                val = 0
+
+        if gnmval > 0.0 and gnmval != 1.0 :
+                val = int((maxval-minval)*(float(val)/(maxval-minval))**(1/gnmval))
+
+        return val
 
 def conv16to64RGGBGRY(data,w,h) :
 
@@ -164,6 +177,25 @@ def div_max(data) :
 
         return buffer
 
+def cut_max(data) :
+
+        buffer = []
+        dpos = 0
+
+        for i in range(len(data)//4) :
+                alp = data[dpos]
+                dpos = dpos + 1
+                red = data[dpos] & 0xFF
+                dpos = dpos + 1
+                grn = data[dpos] & 0xFF
+                dpos = dpos + 1
+                blu = data[dpos] & 0xFF
+                dpos = dpos + 1
+                buffer.append((red,grn,blu,alp))
+
+        return buffer
+
+
 # VALUE CONVERT
 
 def value4(lb) :
@@ -207,7 +239,7 @@ def crc_calc(crc, buff, magic) :
 
 # MAIN
 
-print(f"*** PNG16 to TRUE-COLOR CONVERTER VERSION {ver}***")
+print(f"*** PNG16-GRAY to TRUE-COLOR CONVERTER VERSION {ver}***")
 
 while len( fnm := input("file : ") ) > 0 :
 
@@ -263,6 +295,7 @@ while len( fnm := input("file : ") ) > 0 :
                         f.close()
                         continue
                 else :
+                        f.close()
 
                         print("*** DEBAYER MODE ***")
                         print("1: GRAY")
@@ -274,15 +307,36 @@ while len( fnm := input("file : ") ) > 0 :
                                 if 1 <= dm and dm <= 3 :
                                         break
 
+                        global minval
+                        global maxval
+                        global gnmval
+
+                        minval = 0
+                        maxval = 0xFFFF
+                        gnmval = 1.0000
+
+                        print("*** CORRECTION SETTING ***")
+
+                        while True :
+                                minval = int(input(f"MIN {minval} :"))
+                                maxval = int(input(f"MAX {maxval} :"))
+                                gnmval = float(input(f"GNM {gnmval} :"))
+                                if minval >= maxval :
+                                        continue
+                                if gnmval <= 0.0  :
+                                        continue
+                                break
+
                         print("*** CONVERT MODE ***")
                         print("1: SHIFT MAX")
                         print("2: DIV   MAX")
+                        print("3: CUT   MAX")
 
                         mode = 0
 
                         while True :
                                 mode = int(input("MODE :"))
-                                if 1 <= mode and mode <= 2 :
+                                if 1 <= mode and mode <= 3 :
                                         break
 
                         imagebuffer = imageio.v2.imread(fnm)
@@ -300,6 +354,8 @@ while len( fnm := input("file : ") ) > 0 :
                                 imagebuffer = shift_max(imagebuffer)
                         if mode == 2 :
                                 imagebuffer = div_max(imagebuffer)
+                        if mode == 3 :
+                                imagebuffer = cut_max(imagebuffer)
 
                         img_cv = Image.new('RGBA',(width,height))
 
