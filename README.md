@@ -18,3 +18,9 @@
 ( shopitem.py / shop.py )
 
 クラスによる販売管理(構築中)
+
+４．PIL DEBAYER
+
+( pil-debayer.py )
+
+SharpCap の スナップショットをdebayerします。
