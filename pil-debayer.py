@@ -2,7 +2,9 @@
 #
 # RAW DATA DEBAYER PROGRAM
 #   ( WITH PIL )
-# ばーじょん 1.0.0
+# ばーじょん 1.0.1
+
+ver = "1.0.1"
 
 from io import BytesIO
 
@@ -74,7 +76,8 @@ def debayer3x3RGGB(img,x,y) :
 
     return (red,grn,blu)
 
-
+print(f"*** DEBAYER PROGRAM ( with PIL ) VERSION:{ver}")
+print("\nSELECT GRAY SCALE FILE\n")
 while len( fnm := input("file : ") ) > 0 :
 
     try :
