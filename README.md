@@ -25,7 +25,7 @@
 
 SharpCap の スナップショット(8bit-gray)を TRUE COLOR に debayer します。
 
-４a．PNG08 DEBAYER ( FULL SCRATCH )
+４a．PNG-DEBAYER ( FULL SCRATCH )
 
 ライブラリを使用せずに PNG の I/O を記述
 
