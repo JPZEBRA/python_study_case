@@ -655,11 +655,15 @@ while len( fnm := input("file : ") ) > 0 :
                 else :
 
                         try :
+
                                 ipos = 0
+
+                                safety = 5000
+
                                 if bit ==  8 :
-                                        imagebuffer = bytearray(width*height)
+                                        imagebuffer = bytearray(width*height+safety)
                                 if bit == 16 :
-                                        imagebuffer = bytearray(width*4*height)
+                                        imagebuffer = bytearray(width*2*height+safety)
 
                                 while True :
 
@@ -745,8 +749,8 @@ while len( fnm := input("file : ") ) > 0 :
                         except AssertionError:
                                 print("DATA ERROR !")
                                 f.close()
-#                        except IndexError:
-                                print("DAT ERROR !")
+                        except IndexError:
+                                print("BUFFER ERROR !")
                                 f.close()
                         else :
                                 pass
