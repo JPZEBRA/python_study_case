@@ -13,6 +13,8 @@ def rdd(data,x,y,w,h) :
 
         if x < 0 :
                 return 0
+        if y < 0 :
+                return 0
 
         dt11 = data[ (w+1)*y + x + 1]
 
@@ -21,6 +23,8 @@ def rdd(data,x,y,w,h) :
 def rdb(data,x,y,w,h) :
 
         if x < 0 :
+                return 0
+        if y < 0 :
                 return 0
 
         dt11 = data[ w*y + x ]
@@ -100,12 +104,29 @@ def rgb08M1x1(data,x,y,w,h) :
         return bytes([red,grn,blu])
 
 
-# DECODE PNG 
+# LINE FILTER
 
 def check_filter(data,x,y,w,h) :
 
         dt11 = data[(w+1)*y]
         return dt11
+
+# Paeth Predictor
+
+def fl_pp(a,b,c) :
+
+        p = a + b - c
+        pa = abs(p - a)
+        pb = abs(p - a)
+        pc = abs(p - a)
+
+        if pa <= pb and pa <= pc :
+                return a
+        if pb <= pc :
+                return b
+        return c
+
+# DECODE
 
 def filter08(data,w,h,bfr) :
 
@@ -117,16 +138,22 @@ def filter08(data,w,h,bfr) :
                 fl = check_filter (data,0,i,w,h)
  
                 for j in range(0,w) :
+
                         dt11 = 0
+
+                        if fl>=5 :
+                                print("* FILTER ERROR  *") 
+                        if fl==4 :
+                                dt11 = ( rdd(data,j,i,w,h) + fl_pp( rdb(buffer,j-bfr,i,w,h), rdb(buffer,j,i-1,w,h), rdb(buffer,j-bfr,i-1,w,h) ) ) % 256
+                        if fl==3 :
+                                dt11 = ( rdd(data,j,i,w,h) + floor( ( rdb(buffer,j-bfr,i,w,h) + rdb(buffer,j,i-1,w,h) )/2 ) ) % 256
                         if fl==2 :
                                 dt11 = ( rdd(data,j,i,w,h) + rdb(buffer,j,i-1,w,h) ) % 256
                         if fl==1 :
                                 dt11 = ( rdd(data,j,i,w,h) + rdb(buffer,j-bfr,i,w,h) ) % 256
                         if fl==0 :
                                 dt11 = rdd(data,j,i,w,h)
-                        if fl>=3 :
-                                print("* FILTER ERROR : NOT YET ! *") 
-                                dt11 = rdd(data,j,i,w,h)
+
                         buffer[bpos] = dt11
                         bpos = bpos + 1
 
