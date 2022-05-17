@@ -134,7 +134,7 @@ def filter08(data,w,h,bfr) :
 
 # DEBAYER
 
-def conv08C(data,w,h) :
+def convert08(data,w,h,md) :
 
         wd = w
         ht = h
@@ -155,7 +155,12 @@ def conv08C(data,w,h) :
 
                 for wdh in range(0,wd) :
 
-                        bb = rgb08C3x3(data,wdh,hgt,w,h)
+                        if md == 1 or md <1 :
+                                bb = rgb08M1x1(data,wdh,hgt,w,h)
+                        if md == 2 :
+                                bb = rgb08C2x2(data,wdh,hgt,w,h)
+                        if md == 3 or md > 3 :
+                                bb = rgb08C3x3(data,wdh,hgt,w,h)
 
                         buffer[bpos + 0] = bb[0]
                         buffer[bpos + 1] = bb[1]
@@ -163,34 +168,6 @@ def conv08C(data,w,h) :
                         bpos = bpos + pd
 
         return buffer
-
-def conv08M(data,w,h) :
-
-        wd = w
-        ht = h
-        pd = 3
-
-        buffer = bytearray(wd*ht*pd+ht)
-        bpos = 0
-
-        for hgt in range(0,ht) :
-
-                buffer[bpos] = 0
-                bpos = bpos + 1
-
-                if hgt%100 == 0 :
-                        print("LINE:",hgt)
-                for wdh in range(0,wd) :
-
-                        bb = rgb08M1x1(data,wdh,hgt,w,h)
-
-                        buffer[bpos + 0] = bb[0]
-                        buffer[bpos + 1] = bb[1]
-                        buffer[bpos + 2] = bb[2]
-                        bpos = bpos + pd
-
-        return buffer
-
 
 # DATA CONVERT
 
@@ -412,10 +389,7 @@ while len( fnm := input("file : ") ) > 0 :
 
                                 print("*** CONVERT FILE ***")
 
-                                if md == 1 :
-                                        cbuffer = conv08M(filter08(rawdata,width,height,1),width,height)
-                                if md == 2 or md == 3 :
-                                        cbuffer = conv08C(filter08(rawdata,width,height,1),width,height)
+                                cbuffer = convert08(filter08(rawdata,width,height,1),width,height,md)
 
                                 buffer = zlib.compress(cbuffer)
 
