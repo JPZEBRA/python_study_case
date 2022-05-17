@@ -1,9 +1,9 @@
 # 趣味のPython学習　Project 02-00
 # Python PNG08-Debayer ( RGGB )
 # FULL SCRATCH CODE
-# ばーじょん 1.0.5
+# ばーじょん 1.0.6
 
-ver = "1.0.5"
+ver = "1.0.6"
 
 import zlib
 
@@ -38,9 +38,21 @@ def rdf(data,x,y,c,w,h) :
         if y < 0 :
                 return 0
 
-        dt11 = data[ (w*3+1)*y + 1 + x*3 + c ]
+        dt11 = data[ (w*3)*y + x*3 + c ]
 
         return dt11
+
+def rdw(data,x,y,w,h) :
+
+        if x < 0 :
+                return 0
+        if y < 0 :
+                return 0
+
+        dt11 = data[ (w*2)*y + x*2 + 0]
+        dt12 = data[ (w*2)*y + x*2 + 1]
+
+        return ( dt11<<8 | dt12 )
 
 # DEBAYER
 
@@ -64,6 +76,27 @@ def rgb08C2x2(data,x,y,w,h) :
                 pass
 
         return bytes([0,0,0])
+
+def rgb16C2x2(data,x,y,w,h) :
+
+        xx = x // 2
+        yy = y // 2 
+
+
+        try :
+                dt11 = rdw(data,xx*2+0,yy*2+0,w,h)
+                dt12 = rdw(data,xx*2+1,yy*2+0,w,h)
+                dt13 = rdw(data,xx*2+0,yy*2+1,w,h)
+                dt14 = rdw(data,xx*2+1,yy*2+1,w,h)
+ 
+                dt15 = ( dt12 + dt13 ) // 2
+
+                return ([dt11,dt15,dt14])
+
+        except IndexError:
+                pass
+
+        return ([0,0,0])
 
 def rgb08C3x3(data,x,y,w,h) :
 
@@ -104,6 +137,45 @@ def rgb08C3x3(data,x,y,w,h) :
 
         return bytes([0,0,0])
 
+def rgb16C3x3(data,x,y,w,h) :
+
+        try :
+                dt11 = rdw(data, x-1 ,y-1, w,h)
+                dt12 = rdw(data, x+0 ,y-1, w,h)
+                dt13 = rdw(data, x+1 ,y-1, w,h)
+
+                dt21 = rdw(data, x-1 ,y+0, w,h)
+                dt22 = rdw(data, x+0 ,y+0, w,h)
+                dt23 = rdw(data, x+1 ,y+0, w,h)
+
+                dt31 = rdw(data, x-1 ,y+1, w,h)
+                dt32 = rdw(data, x+0 ,y+1, w,h)
+                dt33 = rdw(data, x+1 ,y+1, w,h)
+
+                if x%2==0 and y%2==0 :
+                        red = dt22
+                        grn = (dt12+dt21+dt23+dt32)//4
+                        blu = (dt11+dt13+dt31+dt33)//4
+                if x%2==0 and y%2==1 :
+                        red = (dt12+dt32)//2
+                        grn = dt22
+                        blu = (dt21+dt23)//2
+                if x%2==1 and y%2==0 :
+                        red = (dt21+dt23)//2
+                        grn = dt22
+                        blu = (dt12+dt32)//2
+                if x%2==1 and y%2==1 :
+                        red = (dt11+dt13+dt31+dt33)//4
+                        blu = dt22
+                        grn = (dt12+dt21+dt23+dt32)//4
+        
+                return ([red,grn,blu])
+
+        except IndexError:
+                pass
+
+        return ([0,0,0])
+
 def rgb08M1x1(data,x,y,w,h) :
 
         dt11 = rdb(data,x,y,w,h)
@@ -113,6 +185,16 @@ def rgb08M1x1(data,x,y,w,h) :
         blu = dt11
 
         return bytes([red,grn,blu])
+
+def rgb16M1x1(data,x,y,w,h) :
+
+        dt11 = rdw(data,x,y,w,h)
+
+        red = dt11
+        grn = dt11
+        blu = dt11
+
+        return ([red,grn,blu])
 
 
 # LINE FILTER
@@ -128,8 +210,8 @@ def fl_pp(a,b,c) :
 
         p = a + b - c
         pa = abs(p - a)
-        pb = abs(p - a)
-        pc = abs(p - a)
+        pb = abs(p - b)
+        pc = abs(p - c)
 
         if pa <= pb and pa <= pc :
                 return a
@@ -139,7 +221,7 @@ def fl_pp(a,b,c) :
 
 # DECODE
 
-def filter08(data,w,h,bfr) :
+def defilter08(data,w,h,bfr) :
 
         buffer = bytearray(w*h*3)
         bpos = 0
@@ -147,7 +229,7 @@ def filter08(data,w,h,bfr) :
         for i in range(0,h) :
 
                 fl = check_filter (data,0,i,w,h)
- 
+
                 for j in range(0,w) :
 
                         dt11 = 0
@@ -170,7 +252,7 @@ def filter08(data,w,h,bfr) :
 
         return buffer
 
-# DEBAYER
+# DEBAYER 08
 
 def convert08(data,w,h,md,fl) :
 
@@ -184,9 +266,6 @@ def convert08(data,w,h,md,fl) :
 #       DEBAYER
 
         for hgt in range(0,ht) :
-
-                buffer[bpos] = 0
-                bpos = bpos + 1
 
                 if hgt%100 == 0 :
                         print("LINE:",hgt)
@@ -205,7 +284,15 @@ def convert08(data,w,h,md,fl) :
                         buffer[bpos + 2] = bb[2]
                         bpos = bpos + pd
 
-#       FILTER
+        return setfilter08(buffer,w,h,fl)
+
+# FILTER 08
+
+def setfilter08(buffer,w,h,fl) :
+
+        wd = w
+        ht = h
+        pd = 3
 
         filterd = bytearray(wd*ht*pd+ht)
         bpos = 0
@@ -243,6 +330,153 @@ def convert08(data,w,h,md,fl) :
                         bpos = bpos + pd
 
         return filterd
+
+# DEBAYER 16
+
+def convert16(data,w,h,md,fl) :
+
+        wd = w
+        ht = h
+
+        wbf = []
+
+#       DEBAYER
+
+        for hgt in range(0,ht) :
+
+                if hgt%100 == 0 :
+                        print("LINE:",hgt)
+
+                for wdh in range(0,wd) :
+
+                        if md == 1 or md <1 :
+                                ww = rgb16M1x1(data,wdh,hgt,w,h)
+                        if md == 2 :
+                                ww = rgb16C2x2(data,wdh,hgt,w,h)
+                        if md == 3 or md > 3 :
+                                ww = rgb16C3x3(data,wdh,hgt,w,h)
+
+                        wbf.append(ww[0])
+                        wbf.append(ww[1])
+                        wbf.append(ww[2])
+ 
+        return setfilter08(tobytes(correct(wbf)),w,h,fl)
+
+# VALUE CORRECTION
+
+def change_val(st,val) :
+
+        keyin = input(f"{st} : {val} = ")
+        if len(keyin) == 0 :
+                keyin = str(val)
+        return keyin
+
+def correct(wbf) :
+
+        lg   = len(wbf)
+
+        rmin = 0xFFFF
+        rmax = 0x0000
+        gmin = 0xFFFF
+        gmax = 0x0000
+        bmin = 0xFFFF
+        bmax = 0x0000
+
+        pos = 0
+
+        while pos < lg :
+                if wbf[pos] < rmin : rmin = wbf[pos]
+                if wbf[pos] > rmax : rmax = wbf[pos]
+                pos = pos + 1
+                if wbf[pos] < gmin : gmin = wbf[pos]
+                if wbf[pos] > gmax : gmax = wbf[pos]
+                pos = pos + 1
+                if wbf[pos] < bmin : bmin = wbf[pos]
+                if wbf[pos] > bmax : bmax = wbf[pos]
+                pos = pos + 1
+        print(f"RED {rmin}-{rmax} GRN {gmin}-{gmax} BLU {bmin}-{bmax} ")
+
+        minval = 0x0000
+        maxval = 0xFFFF
+        gnmval = 1.0000
+
+        while True :
+                try :
+                        minval = int  (change_val("MIN",minval))
+                        maxval = int  (change_val("MAX",maxval))
+                        gnmval = float(change_val("GNM",gnmval))
+                except ValueError :
+                        continue
+                if minval >= maxval :
+                        continue
+                if gnmval <= 0 :
+                        continue
+                break
+
+        dbf = []
+
+        for n in range(0,lg) :
+
+                val = wbf[n]
+
+#               MIN-MAX CORRECT
+                if val > maxval :
+                        val = maxval
+                        val = val - minval
+                if val < 0 :
+                        val = 0
+#               GANMMA CORRECT
+                if gnmval > 0.0 and gnmval != 1.0 :
+                        val = int((maxval-minval)*(float(val)/(maxval-minval))**(1/gnmval))
+
+                dbf.append(val)
+
+        return dbf
+
+# SET TO BYTE
+
+def tobytes(wbf) :
+
+        buffer = []
+
+        lg = len(wbf)
+        mx = max(wbf)
+        sf = 0
+
+        if mx < 256 :
+                mode = 3
+        else :
+
+                print(f"MAX VALUE : {mx} ")
+                print("1: SFT MAX")
+                print("2: DIV MAX")
+                print("3: CUT MAX")
+
+                while True :
+                        try :
+                                mode = int(input("MODE : "))
+                        except ValueError :
+                                continue
+                        if 1 <= mode and mode <= 3 :
+                                break
+ 
+        if mode == 1 :
+                for n in range(0,8) :
+                        if mx < 256 :
+                                break
+                        mx = mx >> 1
+                        sf = sf + 1
+                for n in range(0,lg) :
+                        buffer.append(wbf[n]>>sf)
+        if mode == 2 :
+                for n in range(0,lg) :
+                        buffer.append(wbf[n]*255//mx)
+        if mode == 3 :
+                for n in range(0,lg) :
+                        buffer.append(wbf[n]&0x00FF)
+
+        return buffer
+
 
 # DATA CONVERT
 
@@ -410,17 +644,22 @@ while len( fnm := input("file : ") ) > 0 :
                         if col>0 :
                                 print("NOT GRAY SCALE !")
                                 assert(False)
-                        if bit != 8 :
+                        if bit != 8 and bit != 16 :
                                 print("BIT SIZE ERROR !")
                                 assert(False)
+
                 except AssertionError:
                         print("DATA ERROR !")
                         f.close()
+
                 else :
 
                         try :
                                 ipos = 0
-                                imagebuffer = bytearray(width*height)
+                                if bit ==  8 :
+                                        imagebuffer = bytearray(width*height)
+                                if bit == 16 :
+                                        imagebuffer = bytearray(width*4*height)
 
                                 while True :
 
@@ -436,16 +675,19 @@ while len( fnm := input("file : ") ) > 0 :
 
                                                 for i in range(size) :
                                                         imagebuffer[ipos] = buffer[i]
-                                                        ipos = ipos +1
+                                                        ipos = ipos + 1
 
                                                 continue
 
 
+                                        if sb == b'IEND' :
+                                                assert(size == 0 )
+                                                crc = f.read(4)
+                                                f.close()
+                                                break
+
+                                        buffer = f.read(size)
                                         crc = f.read(4)
-                                        assert(sb == b'IEND' )
-                                        assert(size == 0 )
-                                        f.close()
-                                        break
 
                                 rawdata = zlib.decompress(imagebuffer)
 
@@ -457,10 +699,12 @@ while len( fnm := input("file : ") ) > 0 :
                                 print("3: RGGB 3x3")
 
                                 while True :
-
-                                        md = int(input("MODE :"))
-                                        if 1 <= md and md <= 3 :
-                                                break
+                                        try :
+                                                md = int(input("MODE :"))
+                                                if 1 <= md and md <= 3 :
+                                                        break
+                                        except ValueError :
+                                                continue
 
                                 print("*** FILTER MODE ***")
                                 print("0: NON")
@@ -471,22 +715,28 @@ while len( fnm := input("file : ") ) > 0 :
 
 
                                 while True :
-
-                                        fl = int(input("FILTER :"))
-                                        if 0 <= fl and fl <= 3 :
-                                                break
+                                        try :
+                                                fl = int(input("FILTER :"))
+                                                if 0 <= fl and fl <= 3 :
+                                                        break
+                                        except ValueError :
+                                                continue
 
                                 print("*** CONVERT FILE ***")
 
-                                cbuffer = convert08(filter08(rawdata,width,height,1),width,height,md,fl)
+                                if bit ==  8 :
+                                        cbuffer = convert08(defilter08(rawdata,width,height,1),width,height,md,fl)
+                                if bit == 16 :
+                                        cbuffer = convert16(defilter08(rawdata,width*2,height,2),width,height,md,fl)
 
                                 buffer = zlib.compress(cbuffer)
 
                                 print("RGB:",len(buffer))
 
-                                print("*** WRITE OUT ***")
-
                                 fno = fnm + ".dev" + str(md) + ".png"
+
+
+                                print(f"*** WRITE OUT {fno} ***")
 
                                 writefile(fno,width,height,buffer)
 
@@ -494,6 +744,9 @@ while len( fnm := input("file : ") ) > 0 :
 
                         except AssertionError:
                                 print("DATA ERROR !")
+                                f.close()
+#                        except IndexError:
+                                print("DAT ERROR !")
                                 f.close()
                         else :
                                 pass
