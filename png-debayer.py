@@ -473,7 +473,7 @@ def tobytes(wbf) :
                         buffer.append(wbf[n]*255//mx)
         if mode == 3 :
                 for n in range(0,lg) :
-                        buffer.append(wbf[n]&0x00FF)
+                        buffer.append(min([wbf[n],0x00FF]))
 
         return buffer
 

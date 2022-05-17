@@ -166,11 +166,11 @@ def div_max(data) :
         for i in range(len(data)//4) :
                 alp = data[dpos]
                 dpos = dpos + 1
-                red = int(float(data[dpos])/pw*0xFF)
+                red = int(float(data[dpos])/pw*0x00FF)
                 dpos = dpos + 1
-                grn = int(float(data[dpos])/pw*0xFF)
+                grn = int(float(data[dpos])/pw*0x00FF)
                 dpos = dpos + 1
-                blu = int(float(data[dpos])/pw*0xFF)
+                blu = int(float(data[dpos])/pw*0x00FF)
                 dpos = dpos + 1
                 buffer.append((red,grn,blu,alp))
 
@@ -184,11 +184,11 @@ def cut_max(data) :
         for i in range(len(data)//4) :
                 alp = data[dpos]
                 dpos = dpos + 1
-                red = data[dpos] & 0xFF
+                red = min([data[dpos],0x00FF])
                 dpos = dpos + 1
-                grn = data[dpos] & 0xFF
+                grn = min([data[dpos],0x00FF])
                 dpos = dpos + 1
-                blu = data[dpos] & 0xFF
+                blu = min([data[dpos],0x00FF])
                 dpos = dpos + 1
                 buffer.append((red,grn,blu,alp))
 
