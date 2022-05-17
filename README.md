@@ -25,13 +25,6 @@
 
 SharpCap の スナップショット(8bit-gray)を TRUE COLOR に debayer します。
 
-４a．PNG-DEBAYER ( FULL SCRATCH )
-
-ライブラリを使用せずに PNG の I/O を記述
-
-( png-debayer.py )
-
-
 ５．PNG08 REBAYER
 
 (png08rebayer.py)
@@ -49,3 +42,10 @@ SharpCap の スナップショット(16bit-gray)を TRUE-COLOR に debayer し�
 (png16tiff.py)
 
 SharpCap の スナップショット(16bit-gray)を tiff に debayer します。
+
+８．PNG-DEBAYER ( FULL SCRATCH )
+
+ライブラリを使用せずに PNG の I/O を記述
+
+( png-debayer.py )
+
