@@ -19,21 +19,21 @@
 
 クラスによる販売管理(構築中)
 
-４．PIL DEBAYER
+４．PNG08 DEBAYER
 
-( pil-debayer.py )
+( png08debayer.py )
 
-SharpCap の スナップショットを debayer します。
+SharpCap の スナップショット(8bit-gray)を TRUE COLOR に debayer します。
 
-５．PIL REBAYER
+５．PNG08 REBAYER
 
-(pil-rebayer.py)
+(png08rebayer.py)
 
 カラー画像を bayerd (RGGB/PNG) にする逆変換。
 
-６．PNG CONVERTER
+６．PNG16 DEBAYER
 
-(png-converter.py)
+(png16debayer.py)
 
 SharpCap の スナップショット(16bit-gray)を TRUE-COLOR に debayer します。
 
