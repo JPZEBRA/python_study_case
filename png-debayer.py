@@ -1,9 +1,9 @@
 # 趣味のPython学習　Project 02-00
 # Python PNG08-Debayer ( RGGB )
 # FULL SCRATCH CODE
-# ばーじょん 1.0.1
+# ばーじょん 1.0.5
 
-ver = "1.0.1"
+ver = "1.0.5"
 
 import zlib
 
@@ -28,6 +28,17 @@ def rdb(data,x,y,w,h) :
                 return 0
 
         dt11 = data[ w*y + x ]
+
+        return dt11
+
+def rdf(data,x,y,c,w,h) :
+
+        if x < 0 :
+                return 0
+        if y < 0 :
+                return 0
+
+        dt11 = data[ (w*3+1)*y + 1 + x*3 + c ]
 
         return dt11
 
@@ -146,7 +157,7 @@ def filter08(data,w,h,bfr) :
                         if fl==4 :
                                 dt11 = ( rdd(data,j,i,w,h) + fl_pp( rdb(buffer,j-bfr,i,w,h), rdb(buffer,j,i-1,w,h), rdb(buffer,j-bfr,i-1,w,h) ) ) % 256
                         if fl==3 :
-                                dt11 = ( rdd(data,j,i,w,h) + floor( ( rdb(buffer,j-bfr,i,w,h) + rdb(buffer,j,i-1,w,h) )/2 ) ) % 256
+                                dt11 = ( rdd(data,j,i,w,h) + ( ( rdb(buffer,j-bfr,i,w,h) + rdb(buffer,j,i-1,w,h) )//2 ) ) % 256
                         if fl==2 :
                                 dt11 = ( rdd(data,j,i,w,h) + rdb(buffer,j,i-1,w,h) ) % 256
                         if fl==1 :
@@ -161,7 +172,7 @@ def filter08(data,w,h,bfr) :
 
 # DEBAYER
 
-def convert08(data,w,h,md) :
+def convert08(data,w,h,md,fl) :
 
         wd = w
         ht = h
@@ -170,12 +181,12 @@ def convert08(data,w,h,md) :
         buffer = bytearray(wd*ht*pd+ht)
         bpos = 0
 
+#       DEBAYER
+
         for hgt in range(0,ht) :
 
                 buffer[bpos] = 0
                 bpos = bpos + 1
-
-
 
                 if hgt%100 == 0 :
                         print("LINE:",hgt)
@@ -194,7 +205,44 @@ def convert08(data,w,h,md) :
                         buffer[bpos + 2] = bb[2]
                         bpos = bpos + pd
 
-        return buffer
+#       FILTER
+
+        filterd = bytearray(wd*ht*pd+ht)
+        bpos = 0
+
+        for hgt in range(0,ht) :
+
+                filterd[bpos] = fl
+                bpos = bpos + 1
+
+                if hgt%100 == 0 :
+                        print("LINE:",hgt)
+
+                for wdh in range(0,wd) :
+
+                        if fl == 0:
+                               b0 = rdf(buffer,wdh,hgt,0,w,h)
+                               b1 = rdf(buffer,wdh,hgt,1,w,h)
+                               b2 = rdf(buffer,wdh,hgt,2,w,h)
+                        if fl == 1:
+                               b0 = ( rdf(buffer,wdh,hgt,0,w,h) - rdf(buffer,wdh-1,hgt,0,w,h) ) % 256
+                               b1 = ( rdf(buffer,wdh,hgt,1,w,h) - rdf(buffer,wdh-1,hgt,1,w,h) ) % 256
+                               b2 = ( rdf(buffer,wdh,hgt,2,w,h) - rdf(buffer,wdh-1,hgt,2,w,h) ) % 256
+                        if fl == 2:
+                               b0 = ( rdf(buffer,wdh,hgt,0,w,h) - rdf(buffer,wdh,hgt-1,0,w,h) ) % 256
+                               b1 = ( rdf(buffer,wdh,hgt,1,w,h) - rdf(buffer,wdh,hgt-1,1,w,h) ) % 256
+                               b2 = ( rdf(buffer,wdh,hgt,2,w,h) - rdf(buffer,wdh,hgt-1,2,w,h) ) % 256
+                        if fl == 3:
+                               b0 = ( rdf(buffer,wdh,hgt,0,w,h) - ( ( rdf(buffer,wdh-1,hgt,0,w,h) + rdf(buffer,wdh,hgt-1,0,w,h) )//2 ) ) % 256
+                               b1 = ( rdf(buffer,wdh,hgt,1,w,h) - ( ( rdf(buffer,wdh-1,hgt,1,w,h) + rdf(buffer,wdh,hgt-1,1,w,h) )//2 ) ) % 256
+                               b2 = ( rdf(buffer,wdh,hgt,2,w,h) - ( ( rdf(buffer,wdh-1,hgt,2,w,h) + rdf(buffer,wdh,hgt-1,2,w,h) )//2 ) ) % 256
+
+                        filterd[bpos + 0] = b0
+                        filterd[bpos + 1] = b1
+                        filterd[bpos + 2] = b2
+                        bpos = bpos + pd
+
+        return filterd
 
 # DATA CONVERT
 
@@ -414,9 +462,23 @@ while len( fnm := input("file : ") ) > 0 :
                                         if 1 <= md and md <= 3 :
                                                 break
 
+                                print("*** FILTER MODE ***")
+                                print("0: NON")
+                                print("1: SUB")
+                                print("2: U P")
+                                print("3: ABE")
+                                print("4: PAE")
+
+
+                                while True :
+
+                                        fl = int(input("FILTER :"))
+                                        if 0 <= fl and fl <= 3 :
+                                                break
+
                                 print("*** CONVERT FILE ***")
 
-                                cbuffer = convert08(filter08(rawdata,width,height,1),width,height,md)
+                                cbuffer = convert08(filter08(rawdata,width,height,1),width,height,md,fl)
 
                                 buffer = zlib.compress(cbuffer)
 
