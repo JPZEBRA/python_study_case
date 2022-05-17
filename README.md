@@ -37,5 +37,8 @@ SharpCap の スナップショット(8bit-gray)を TRUE COLOR に debayer し�
 
 SharpCap の スナップショット(16bit-gray)を TRUE-COLOR に debayer します。
 
+７．PNG16 TIFF DEBAYER
 
+(png16tiff.py)
 
+SharpCap の スナップショット(16bit-gray)を tiff に debayer します。
