@@ -18,34 +18,3 @@
 ( shopitem.py / shop.py )
 
 クラスによる販売管理(構築中)
-
-４．PNG08 DEBAYER
-
-( png08debayer.py )
-
-SharpCap の スナップショット(8bit-gray)を TRUE COLOR に debayer します。
-
-５．PNG08 REBAYER
-
-(png08rebayer.py)
-
-カラー画像を bayerd (RGGB/PNG) にする逆変換。
-
-６．PNG16 DEBAYER
-
-(png16debayer.py)
-
-SharpCap の スナップショット(16bit-gray)を TRUE-COLOR に debayer します。
-
-７．PNG16 TIFF DEBAYER
-
-(png16tiff.py)
-
-SharpCap の スナップショット(16bit-gray)を tiff に debayer します。
-
-８．PNG-DEBAYER ( FULL SCRATCH )
-
-ライブラリを使用せずに PNG の I/O を記述
-
-( png-debayer.py )
-
