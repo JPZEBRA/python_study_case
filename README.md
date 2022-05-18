@@ -18,3 +18,5 @@
 ( shopitem.py / shop.py )
 
 クラスによる販売管理(構築中)
+
+DEBAYER関連は python-bayer-edit に独立させました。
